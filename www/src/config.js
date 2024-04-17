@@ -3,7 +3,7 @@
 
 const config = {
   "aws_user_pools_web_client_id": "2l3cc2ora7di5ucdc20gmhimfn",     // CognitoClientID
-  "api_base_url": "https://w7dbi02czd.execute-api.eu-north-1.amazonaws.com/{StageNameParam}",                                     // TodoFunctionApi
+  "api_base_url": "https://w7dbi02czd.execute-api.eu-north-1.amazonaws.com/prod",                                     // TodoFunctionApi
   "cognito_hosted_domain": "mytodoappdemo2-lambda-refarch-webapp.auth.eu-north-1.amazoncognito.com",                   // CognitoDomainName
   "redirect_url": "https://master.d1lfzx10m4cy0l.amplifyapp.com"                                      // AmplifyURL
 };
