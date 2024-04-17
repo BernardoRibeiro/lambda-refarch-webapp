@@ -3,10 +3,16 @@
 
 // default imports
 const AWSXRay = require("aws-xray-sdk-core");
-const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 const { metricScope, Unit } = require("aws-embedded-metrics");
-const DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
+// const DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
 const { v1: uuidv1 } = require("uuid");
+
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, PutCommand } = require("@aws-sdk/lib-dynamodb");
+
+const client = AWSXRay.captureAWSv3Client(new DynamoDBClient());
+const dynamoDbClient = DynamoDBDocumentClient.from(client);
+
 
 // environment variables
 const { TABLE_NAME, ENDPOINT_OVERRIDE, REGION } = process.env;
@@ -17,7 +23,7 @@ if (ENDPOINT_OVERRIDE !== "") {
   options.endpoint = ENDPOINT_OVERRIDE;
 }
 
-const docClient = new AWS.DynamoDB.DocumentClient(options);
+// const docClient = new AWS.DynamoDB.DocumentClient(options);
 // response helper
 const response = (statusCode, body, additionalHeaders) => ({
   statusCode,
@@ -69,7 +75,9 @@ function addRecord(event) {
     Item: item_body,
   };
 
-  return docClient.put(params);
+  return dynamoDbClient.send(new PutCommand(params));
+
+  // return docClient.put(params);
 }
 
 // Lambda Handler
