@@ -3,9 +3,16 @@
 
 // default imports
 const AWSXRay = require("aws-xray-sdk-core");
-const AWS = AWSXRay.captureAWS(require("aws-sdk"));
 const { metricScope, Unit } = require("aws-embedded-metrics");
-const DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
+// const DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
+
+
+const { DynamoDBClient, DeleteItemCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient } = require("@aws-sdk/lib-dynamodb");
+const { marshall } = require("@aws-sdk/util-dynamodb");
+
+const client = AWSXRay.captureAWSv3Client(new DynamoDBClient());
+const dynamoDbClient = DynamoDBDocumentClient.from(client);
 
 // environment variables
 const { TABLE_NAME, ENDPOINT_OVERRIDE, REGION } = process.env;
@@ -16,7 +23,6 @@ if (ENDPOINT_OVERRIDE !== "") {
   options.endpoint = ENDPOINT_OVERRIDE;
 }
 
-const docClient = new AWS.DynamoDB.DocumentClient(options);
 // response helper
 const response = (statusCode, body, additionalHeaders) => ({
   statusCode,
@@ -45,7 +51,7 @@ function getCognitoUsername(event) {
   return null;
 }
 
-function deleteRecordById(username, recordId) {
+async function deleteRecordById(username, recordId) {
   let params = {
     TableName: TABLE_NAME,
     Key: {
@@ -54,7 +60,9 @@ function deleteRecordById(username, recordId) {
     },
   };
 
-  return docClient.delete(params);
+  return await dynamoDbClient.send(new DeleteItemCommand(params));
+
+  // return docClient.delete(params);
 }
 
 // Lambda Handler
@@ -62,6 +70,7 @@ exports.deleteToDoItem = metricScope((metrics) => async (event, context) => {
   metrics.setNamespace("TodoApp");
   metrics.putDimensions({ Service: "deleteTodo" });
   metrics.setProperty("RequestId", context.requestId);
+  console.log('event', event)
 
   if (!isValidRequest(context, event)) {
     metrics.putMetric("Error", 1, Unit.Count);
